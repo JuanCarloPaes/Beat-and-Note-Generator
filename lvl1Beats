@@ -1,0 +1,41 @@
+import librosa
+import numpy as np
+from pydub import AudioSegment
+
+def read_mp3(file_path):
+    audio = AudioSegment.from_mp3(file_path)
+    
+    # Convert the audio data to floating-point format
+    samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
+    
+    sample_rate = audio.frame_rate
+    return samples, sample_rate, len(audio) / 1000.0  # Return duration in seconds
+
+def detect_beats(samples, sample_rate, duration, sensitivity):
+    # Use librosa to find beat frames
+    onset_frames = librosa.onset.onset_detect(y=samples, sr=sample_rate, units='frames', hop_length=1024, backtrack=True, pre_max=20, post_max=20, pre_avg=50, post_avg=50, delta=0.2, wait=0)
+
+    # Convert frame indices to time
+    beat_times = librosa.frames_to_time(onset_frames, sr=sample_rate)
+
+    # Add delay of 0.8 seconds for each beat
+    beat_times_with_delay = [time + i * 0.3 for i, time in enumerate(beat_times)]
+
+    # Filter out beat times beyond the duration of the music
+    valid_beat_times = [time for time in beat_times_with_delay if time <= duration]
+
+    return valid_beat_times
+
+def save_beats_to_txt(beat_times, output_file):
+    with open(output_file, 'w') as file:
+        for time in beat_times:
+            file.write(f"{time:.2f}\n")
+
+if __name__ == "__main__":
+    mp3_file_path = "Konosora9A.mp3"
+    output_txt_file = "beats_output.txt"
+    sensitivity = 1  # You can adjust this value based on your requirements
+
+    samples, sample_rate, duration = read_mp3(mp3_file_path)
+    beat_times = detect_beats(samples, sample_rate, duration, sensitivity)
+    save_beats_to_txt(beat_times, output_txt_file)

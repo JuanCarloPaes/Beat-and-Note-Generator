@@ -1,0 +1,13 @@
+import random
+
+# Define the file path
+file_path = "random_numbers.txt"
+
+# Open the file in write mode
+with open(file_path, "w") as file:
+    # Generate 132 random numbers between 1 and 4
+    for _ in range(182):
+        random_number = random.randint(1, 4)
+        file.write(f"{random_number}\n")
+
+print(f"File '{file_path}' has been generated.")
